@@ -1,0 +1,80 @@
+<div id="widget-messages">
+    <button class="btn" onclick="loadMessages(true)">Actualizar</button>
+    <section id="chat">
+    </section>
+    <div id="widget-agregar">
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="text-add">Texto:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="text-add"
+                       placeholder="Texto del mensaje" id="text-add"/>
+            </div>
+        </div>
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="button" id="boton-add">Enviar</button>
+        </div>
+    </div>
+</div>
+<script>
+    $("#boton-add").click(function () {
+        console.log(selectedFriendId);
+        $.ajax({
+            url: URLbase + "/messages/add/" + selectedFriendId,
+            type: "POST",
+            data: {
+                texto: $("#text-add").val()
+            },
+            dataType: 'json',
+            headers: {"token": token},
+            success: function (response) {
+                $("#main-container").load("widget-messages.html");
+            },
+        });
+    });
+
+    // var interval = 1000;  // 1000 = 1 second
+    function loadMessages() {
+        console.log("Load Messages")
+        $.ajax({
+            url: URLbase + "/user/messages/" + selectedFriendId,
+            type: "GET",
+            data: {},
+            dataType: 'json',
+            headers: {"token": token},
+            success: function (response) {
+                let messages = response.messages;
+                updateMessagesTable(messages);
+            }, complete: function (data) {
+                // Schedule the next
+                // setTimeout(loadMessages, interval);
+            },
+            error: function (error) {
+                $("#main-container").load("widget-login.html");
+            }
+        });
+    }
+    // setTimeout(loadMessages, interval);
+
+    function updateMessagesTable(messages) {
+        $("#chat").empty(); // Vaciar la sección
+        messages.forEach(message =>{
+            let fecha = message.fecha;
+            let leido;
+            if(message.leido){
+                leido = "Leído"
+            } else {
+                leido = "No leído"
+            }
+            $("#chat").append(
+                "<div id=" + message._id + ">" +
+                "<div>" + message.emisor + ": " + message.texto + ' ' + fecha + "</div>" +
+                "<div>" + leido + "</div>" +
+                "</div><br>");
+        })
+    }
+
+
+
+
+    loadMessages();
+</script>

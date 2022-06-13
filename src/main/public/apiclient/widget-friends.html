@@ -1,0 +1,76 @@
+<div id="widget-friends">
+    <input type="text" className="form-control" placeholder="Filtrar por nombre" id="filter-by-name"/>
+    <table className="table table-hover">
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellidos</th>
+            <th id = "friendEmail"> Email</th>
+            <th className="col-md-1"></th>
+        </tr>
+        </thead>
+        <tbody id="friendsTableBody"></tbody>
+    </table>
+</div>
+<script>
+    window.history.pushState("", "", "/apiclient/client.html?w=friends");
+    let auxfriends;
+    let messages;
+    let selectedFriendId;
+
+    function loadFriends() {
+        $.ajax({
+            url: URLbase + "/user/friends",
+            type: "GET",
+            data: {},
+            dataType: 'json',
+            headers: {"token": token},
+            success: function (response) {
+                auxfriends = response.friends;
+                updateFriendsTable(auxfriends)
+            },
+            error: function (error) {
+                $("#main-container").load("widget-login.html");
+            }
+        });
+    }
+
+    function updateFriendsTable(friendsUser) {
+        let aux;
+        console.log(friendsUser);
+        $("#friendsTableBody").empty(); // Vaciar la tabla
+        for (let i = 0; i < friendsUser.length; i++) {
+            aux = friendsUser[i]
+            console.log(aux);
+            $("#friendsTableBody").append(
+                "<tr>" +
+                "<td>" + aux.user.nombre + "</td>" +
+                "<td>" + aux.user.apellidos + "</td>" +
+                "<td>" + aux.user.email + "</td>" +
+                "</tr>");
+            if (aux.messages[0] != null && aux.messages[0] != undefined) {
+                $("#friendsTableBody").append(
+                    "<tr>" +
+                    "<td > <a  onclick=messagesDetail('" + aux.user._id + "') >  Último mensaje: </a> <br> < /td>" +
+                    "<td>" + aux.messages[0].fecha + "</td>" +
+                    "<td>" + aux.messages[0].texto + "</td>" +
+                    "</tr>");
+            }
+        }
+    }
+
+    $('#filter-by-name').on('input', function (e) {
+        let filteredFriends = [];
+        let filterValue = $("#filter-by-name").val();
+        filteredFriends = auxfriends.filter(friend => friend.nombre.includes(filterValue));
+        updateFriendsTable(filteredFriends);
+    });
+
+    function messagesDetail(_id) {
+        console.log(_id);
+        selectedFriendId = _id;
+        $("#main-container").load("widget-messages.html");
+    }
+
+    loadFriends();
+</script>
